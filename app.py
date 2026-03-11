@@ -12,8 +12,7 @@ UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Load dataset
-jobs = pd.read_csv("jobs_dataset.csv")
-
+jobs = pd.read_excel("jobpostings.xlsx")
 
 def extract_text(file_path):
 
