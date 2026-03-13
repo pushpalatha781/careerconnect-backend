@@ -14,6 +14,13 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Load dataset
 jobs = pd.read_excel("jobpostings.xlsx")
 
+
+# ✅ ADD THIS ROUTE (for testing backend)
+@app.route("/")
+def home():
+    return "CareerConnect Backend API Running"
+
+
 def extract_text(file_path):
 
     text = ""
@@ -21,7 +28,9 @@ def extract_text(file_path):
     if file_path.endswith(".pdf"):
         with pdfplumber.open(file_path) as pdf:
             for page in pdf.pages:
-                text += page.extract_text()
+                page_text = page.extract_text()
+                if page_text:   # prevents crash if page is empty
+                    text += page_text
 
     elif file_path.endswith(".docx"):
         doc = docx.Document(file_path)
@@ -48,12 +57,12 @@ def upload_resume():
 
     for _, row in jobs.iterrows():
 
-        job_skills = row["skills"].lower().split()
+        job_skills = str(row["skills"]).lower().split(",")
 
         score = 0
 
         for skill in job_skills:
-            if skill in resume_text:
+            if skill.strip() in resume_text:
                 score += 1
 
         results.append({
