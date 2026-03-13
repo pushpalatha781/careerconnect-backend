@@ -12,10 +12,8 @@ UPLOAD_FOLDER = "uploads"
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Load dataset
-jobs = pd.read_excel("jobpostings.xlsx")
+jobs = pd.read_csv("Indian_Fresher_Salary_Skills_2025.csv")
 
-
-# ✅ ADD THIS ROUTE (for testing backend)
 @app.route("/")
 def home():
     return "CareerConnect Backend API Running"
@@ -29,7 +27,7 @@ def extract_text(file_path):
         with pdfplumber.open(file_path) as pdf:
             for page in pdf.pages:
                 page_text = page.extract_text()
-                if page_text:   # prevents crash if page is empty
+                if page_text:
                     text += page_text
 
     elif file_path.endswith(".docx"):
@@ -45,6 +43,9 @@ def extract_text(file_path):
 
 @app.route("/upload_resume", methods=["POST"])
 def upload_resume():
+
+    if "resume" not in request.files:
+        return jsonify({"error": "No file uploaded"}), 400
 
     file = request.files["resume"]
 
@@ -65,14 +66,18 @@ def upload_resume():
             if skill.strip() in resume_text:
                 score += 1
 
-        results.append({
-            "title": row["job_title"],
-            "company_name": row["company"],
-            "location": row["location"],
-            "suitability_score": score * 20
-        })
+        if score > 0:
+            results.append({
+                "title": row["role"],
+                "company_name": row["company"],
+                "location": str(row["city"]) + ", " + str(row["state"]),
+                "salary_lpa": row["salary_lpa"],
+                "suitability_score": score * 20
+            })
 
-    return jsonify(results)
+    results = sorted(results, key=lambda x: x["suitability_score"], reverse=True)
+
+    return jsonify(results[:10])
 
 
 if __name__ == "__main__":
