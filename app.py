@@ -39,9 +39,7 @@ def extract_text(file_path):
         text = open(file_path).read()
 
     return text.lower()
-
-
-@app.route("/upload_resume", methods=["POST"])
+    @app.route("/upload_resume", methods=["POST"])
 def upload_resume():
 
     if "resume" not in request.files:
@@ -67,17 +65,30 @@ def upload_resume():
                 score += 1
 
         if score > 0:
+
+            score_percent = score * 20
+
+            # Determine suitability level
+            if score_percent >= 80:
+                level = "Highly Suitable"
+            elif score_percent >= 60:
+                level = "Suitable"
+            elif score_percent >= 40:
+                level = "Moderately Suitable"
+            else:
+                level = "Not Suitable"
+
             results.append({
                 "title": row["role"],
                 "company_name": row["company"],
                 "location": str(row["city"]) + ", " + str(row["state"]),
                 "salary_lpa": row["salary_lpa"],
-                "suitability_score": score * 20
+                "suitability_level": level
             })
 
-    results = sorted(results, key=lambda x: x["suitability_score"], reverse=True)
-
     return jsonify(results[:10])
+    
+
 
 
 if __name__ == "__main__":
