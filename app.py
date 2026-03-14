@@ -14,11 +14,15 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 # Load dataset
 jobs = pd.read_csv("Indian_Fresher_Salary_Skills_2025.csv")
 
+
 @app.route("/")
 def home():
     return "CareerConnect Backend API Running"
 
 
+# -----------------------------
+# Extract Resume Text
+# -----------------------------
 def extract_text(file_path):
 
     text = ""
@@ -39,7 +43,12 @@ def extract_text(file_path):
         text = open(file_path).read()
 
     return text.lower()
-    @app.route("/upload_resume", methods=["POST"])
+
+
+# -----------------------------
+# Resume Upload API
+# -----------------------------
+@app.route("/upload_resume", methods=["POST"])
 def upload_resume():
 
     if "resume" not in request.files:
@@ -56,39 +65,46 @@ def upload_resume():
 
     for _, row in jobs.iterrows():
 
-        job_skills = str(row["skills"]).lower().split(",")
+        job_skills = [s.strip() for s in str(row["skills"]).lower().split(",")]
 
-        score = 0
+        matched_skills = []
+        missing_skills = []
 
         for skill in job_skills:
-            if skill.strip() in resume_text:
-                score += 1
-
-        if score > 0:
-
-            score_percent = score * 20
-
-            # Determine suitability level
-            if score_percent >= 80:
-                level = "Highly Suitable"
-            elif score_percent >= 60:
-                level = "Suitable"
-            elif score_percent >= 40:
-                level = "Moderately Suitable"
+            if skill in resume_text:
+                matched_skills.append(skill)
             else:
-                level = "Not Suitable"
+                missing_skills.append(skill)
 
-            results.append({
-                "title": row["role"],
-                "company_name": row["company"],
-                "location": str(row["city"]) + ", " + str(row["state"]),
-                "salary_lpa": row["salary_lpa"],
-                "suitability_level": level
-            })
+        total = len(job_skills)
+
+        if total == 0:
+            continue
+
+        match_percent = round((len(matched_skills) / total) * 100, 2)
+        missing_percent = round((len(missing_skills) / total) * 100, 2)
+
+        # Suitability Level
+        if match_percent >= 80:
+            level = "Highly Suitable"
+        elif match_percent >= 60:
+            level = "Suitable"
+        elif match_percent >= 40:
+            level = "Moderately Suitable"
+        else:
+            level = "Not Suitable"
+
+        results.append({
+            "title": row["role"],
+            "company_name": row["company"],
+            "location": str(row["city"]) + ", " + str(row["state"]),
+            "salary_lpa": row["salary_lpa"],
+            "suitability_level": level,
+            "missing_skills": missing_skills,
+            "missing_percent": missing_percent
+        })
 
     return jsonify(results[:10])
-    
-
 
 
 if __name__ == "__main__":
