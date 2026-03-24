@@ -13,6 +13,31 @@ os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Load dataset
 jobs = pd.read_csv("Indian_Fresher_Salary_Skills_2025.csv")
+@app.route("/get_courses")
+def get_courses():
+
+    course_data = {}
+
+    for skill in unique_skills:
+
+        course_data[skill] = {
+            "free": [
+                f"https://www.youtube.com/results?search_query={skill}+course",
+                f"https://www.coursera.org/search?query={skill}&free=true",
+                f"https://www.udemy.com/courses/search/?q={skill}&price=price-free",
+                f"https://www.edx.org/search?q={skill}",
+                f"https://www.geeksforgeeks.org/search/?q={skill}"
+            ],
+            "paid": [
+                f"https://www.udemy.com/courses/search/?q={skill}",
+                f"https://www.coursera.org/search?query={skill}",
+                f"https://www.edx.org/search?q={skill}",
+                f"https://www.pluralsight.com/search?q={skill}",
+                f"https://www.linkedin.com/learning/search?keywords={skill}"
+            ]
+        }
+
+    return jsonify(course_data)
 
 
 @app.route("/")
